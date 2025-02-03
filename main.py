@@ -6,7 +6,7 @@ import time
 from point import Axis, Point
 
 start = Point()
-start.vel.x = 2
+start.vel.x = 3
 start.vel.y = -5
 
 end = Point()
@@ -16,8 +16,8 @@ end.pos.x = 30
 trajectory = []
 trajectory.append(start)
 
-max_vel = 8
-max_acc = 3
+max_vel = 5
+max_acc = 2
 end_vel = 0.5
 
 time_step = 0.05
@@ -86,11 +86,19 @@ while True:
     
     if(decelerating):
         next_point.acc = dir_of_travel.unit() * -max_acc
-        if(trajectory[-1].vel.magnitude() < end_vel):
-            next_point.vel = dir_of_travel.acc.unit() * end_vel
+
+        next_vel = trajectory[-1].vel.magnitude() - max_acc * time_step
+        if(next_vel < end_vel):
+            next_vel = end_vel
+            next_point.vel = next_point.vel.unit_self() * end_vel
         else:
-            next_point.vel += trajectory[-1].acc * time_step
-        next_point.pos += trajectory[-1].vel * time_step
+             next_point.vel += trajectory[-1].acc * time_step
+
+        # if(trajectory[-1].vel.magnitude() < end_vel):
+        #     next_point.vel = dir_of_travel.acc.unit() * end_vel
+        # else:
+        #     next_point.vel += trajectory[-1].acc * time_step
+        # next_point.pos += trajectory[-1].vel * time_step
 
         # if(next_point.vel.magnitude() <= end_vel):
         #     next_point.acc.zero_self()
@@ -106,6 +114,7 @@ while True:
 
         if(next_point.vel.magnitude() > max_vel):
             next_point.vel = next_point.vel.unit() * max_vel
+            next_point.acc.zero_self()
     
     trajectory.append(next_point)
     # print("vel:{0:0.2f},acc:{0:0.2f}".format(trajectory[-1].vel.magnitude(), trajectory[-1].acc.magnitude()))
