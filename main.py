@@ -5,22 +5,25 @@ import time
 
 from point import Axis, Point
 
+plt_lim_x = (-10, 55)
+plt_lim_y = (-50, 10)
+
 start = Point()
-start.vel.x = 3
-start.vel.y = -5
+start.vel.x = -3
+start.vel.y = -10
 
 end = Point()
 end.pos.y = 0
-end.pos.x = 30
+end.pos.x = 50
 
 trajectory = []
 trajectory.append(start)
 
-max_vel = 5
+max_vel = 10
 max_acc = 2
-end_vel = 0.5
+end_vel = 1
 
-time_step = 0.05
+time_step = 0.15
 max_iter = 400
 
 cur_iter = 0
@@ -74,6 +77,7 @@ while True:
     decelerating = False
     # v_final^2 = v_initial^2 + 2 * deceleration * distance
     distance_needed_to_decelerate = (end_vel**2 - trajectory[-1].vel.magnitude()**2) / (2 * -max_acc)
+    distance_needed_to_decelerate *= 0.65
     distance_to_destination = (end.pos - trajectory[-1].pos).magnitude()
 
     print(f"dist_decel:{distance_needed_to_decelerate:.2f}, dist_to_dest:{distance_to_destination:.2f}", end=" ")
@@ -85,14 +89,30 @@ while True:
     next_point.acc = acceleration_used
     
     if(decelerating):
-        next_point.acc = dir_of_travel.unit() * -max_acc
+        deceleration_intended = (dir_of_travel.unit() * end_vel) - trajectory[-1].vel
+            
+        deceleration_used = Axis()
+        if(deceleration_intended.magnitude() > max_acc):
+            deceleration_used = deceleration_intended.unit() * max_acc
+        else: 
+            deceleration_used = deceleration_intended
+            pass
+            # if(trajectory[-1].vel.magnitude() < max_vel):
+            #     deceleration_used = deceleration_intended.unit() * max_acc        
+            # else:
+            #     deceleration_used = deceleration_intended
+                
+        # next_point.acc = dir_of_travel.unit() * -max_acc
+        next_point.acc = deceleration_intended
+        next_point.vel += trajectory[-1].acc * time_step
+        next_point.pos += trajectory[-1].vel * time_step
 
-        next_vel = trajectory[-1].vel.magnitude() - max_acc * time_step
-        if(next_vel < end_vel):
-            next_vel = end_vel
-            next_point.vel = next_point.vel.unit_self() * end_vel
-        else:
-             next_point.vel += trajectory[-1].acc * time_step
+        # next_vel = trajectory[-1].vel.magnitude() - max_acc * time_step
+        # if(next_vel < end_vel):
+        #     next_vel = end_vel
+        #     next_point.vel = next_point.vel.unit_self() * end_vel
+        # else:
+        #      next_point.vel += trajectory[-1].acc * time_step
 
         # if(trajectory[-1].vel.magnitude() < end_vel):
         #     next_point.vel = dir_of_travel.acc.unit() * end_vel
@@ -130,8 +150,11 @@ while True:
     plt.quiver(pt_x[-1], pt_y[-1], acc_x[-1], acc_y[-1], color="red")
     plt.grid()
 
-    plt.xlim(-10, 35)
-    plt.ylim(-10, 10)
+    # plt.xlim(-10, 35)
+    # plt.ylim(-10, 10)
+    plt.xlim(plt_lim_x)
+    plt.ylim(plt_lim_y)
+
     plt.draw()
     plt.pause(time_step * 0.1)
     # plt.show()
